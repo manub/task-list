@@ -16,11 +16,11 @@ import java.util.Map;
 public final class TaskList implements Runnable {
     private static final String QUIT = "quit";
 
-    private final Map<String, List<Task>> tasks = new LinkedHashMap<>();
     private final BufferedReader in;
     private final PrintWriter out;
 
     private long lastId = 0;
+    private Tasks tasks = Tasks.create();
 
     public static void main(String[] args) throws Exception {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -42,12 +42,12 @@ public final class TaskList implements Runnable {
             Command command;
             try {
                 commandString = in.readLine();
-                command = CommandFactory.read(commandString);
+                command = CommandFactory.read(commandString, out);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
             if (command != null) {
-                status = command.execute(null);
+                status = command.execute(tasks);
             } else {
                 execute(commandString);
             }
@@ -58,9 +58,6 @@ public final class TaskList implements Runnable {
         String[] commandRest = commandLine.split(" ", 2);
         String command = commandRest[0];
         switch (command) {
-            case "show":
-                show();
-                break;
             case "add":
                 add(commandRest[1]);
                 break;
@@ -76,16 +73,6 @@ public final class TaskList implements Runnable {
             default:
                 error(command);
                 break;
-        }
-    }
-
-    private void show() {
-        for (Map.Entry<String, List<Task>> project : tasks.entrySet()) {
-            out.println(project.getKey());
-            for (Task task : project.getValue()) {
-                out.printf("    [%c] %d: %s%n", (task.isDone() ? 'x' : ' '), task.getId(), task.getDescription());
-            }
-            out.println();
         }
     }
 
