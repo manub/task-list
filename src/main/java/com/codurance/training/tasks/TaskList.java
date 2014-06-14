@@ -1,5 +1,9 @@
 package com.codurance.training.tasks;
 
+import com.codurance.training.commands.Command;
+import com.codurance.training.commands.CommandFactory;
+import com.codurance.training.commands.Status;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -30,19 +34,23 @@ public final class TaskList implements Runnable {
     }
 
     public void run() {
-        while (true) {
+        Status status = Status.NONE;
+        while (Status.QUIT != status) {
             out.print("> ");
             out.flush();
-            String command;
+            String commandString;
+            Command command;
             try {
-                command = in.readLine();
+                commandString = in.readLine();
+                command = CommandFactory.read(commandString);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            if (command.equals(QUIT)) {
-                break;
+            if (command != null) {
+                status = command.execute(null);
+            } else {
+                execute(commandString);
             }
-            execute(command);
         }
     }
 
